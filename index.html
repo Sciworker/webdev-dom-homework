@@ -56,6 +56,9 @@
           placeholder="Введите ваш комментарий"
           rows="4"
         ></textarea>
+        <div class="add-form-responce">
+            
+        </div>
         <div class="add-form-row">
           <button class="add-form-button">Написать</button>
         </div>
@@ -95,6 +98,7 @@ fetch('https://wedev-api.sky.pro/api/v1/:Petr/comments')
     const form = document.querySelector(".add-form");
     // кнопка формы для добавления комментария
     const addCommentButton = form.querySelector('.add-form-button');
+
     // добавляем слушатель события на кнопку: при клике будет вызываться функция addComment (см далее)
     addCommentButton.addEventListener("click", addFormComment);
     // получаем контейнер в котором находятся комментарии
@@ -266,7 +270,10 @@ fetch(url, options)
         form.querySelector(".add-form-name").value = '';
         form.querySelector(".add-form-text").value = '';
         // иначе выводим модальное окно с надписью "Не все поля заполнены!"
-      } else alert("Не все поля заполнены!");
+      } else { 
+        const negative = document.querySelector(".add-form-responce");
+        negative.append(`Не все поля заполнены`)
+      } 
     }
     
     console.log("It works!");
