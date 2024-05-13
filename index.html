@@ -283,14 +283,20 @@ fetch(url, options)
     console.error('Произошла ошибка с запросом:', error);
   });
 
-
-
-       
-      } else { 
+      } else  if (author.length < 3 && author.length !== 0 ){ 
         const negative = document.querySelector(".add-form-responce");
         negative.style.color = 'red'
-        negative.innerHTML = `Не все поля заполнены`
-      } 
+        negative.innerHTML = `Мало символов в поле авторов`
+      }  else if (text.length < 3 && text.length !== 0){
+        const negative = document.querySelector(".add-form-responce");
+        negative.style.color = 'red'
+        negative.innerHTML = `Мало символов в  поле  текст`
+      }
+      else   {
+        const negative = document.querySelector(".add-form-responce");
+        negative.style.color = 'red'
+        negative.innerHTML = `Поля должны быть заполненны`
+      }
     }
     
     console.log("It works!");
