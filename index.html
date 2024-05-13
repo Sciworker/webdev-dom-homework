@@ -56,11 +56,11 @@
           placeholder="Введите ваш комментарий"
           rows="4"
         ></textarea>
-        <div class="add-form-responce">
+        <div class="add-form-response">
             
         </div>
         <div class="add-form-row">
-          <button class="add-form-button">Написать</button>
+          <button class="add-form-button" disabled>Написать</button>
         </div>
       </div>
     </div>
@@ -69,46 +69,54 @@
   <script>
     "use strict";
     // Код писать здесь
-   let comments  = null
-      // Make a GET request to the API endpoint
-fetch('https://wedev-api.sky.pro/api/v1/:Petr/comments')
-  .then(response => {
-    // Check if the response is successful
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    // Parse the JSON response
-    return response.json();
-  })
-  .then(data => {
-    // Do something with the data
-     comments = data.comments
-     formatDateAPI(comments)
-     console.log(comments)
-    renderComments(comments)
-    console.log(comments)
-    
-  })
-  .catch(error => {
-    // Handle any errors that occur during the fetch
-    console.error('There was a problem with the fetch operation:', error);
-  });
-  console.log(comments)
-      
+
+    let comments = null;
+    const API_URL = 'https://wedev-api.sky.pro/api/v1/:Petr/comments';
     // получаем элементы необходимые для работы (используем document.querySelector('.class-name')) - будет искать элемент на странице по названию класса
     // форма
     const form = document.querySelector(".add-form");
     // кнопка формы для добавления комментария
     const addCommentButton = form.querySelector('.add-form-button');
+    // контейнер комментариев
+    const commentsContainer = document.querySelector(".comments");
 
     // добавляем слушатель события на кнопку: при клике будет вызываться функция addComment (см далее)
     addCommentButton.addEventListener("click", addFormComment);
-    // получаем контейнер в котором находятся комментарии
-    const commentsContainer = document.querySelector(".comments");
+
+    fetchComments(API_URL);
+
+    // асинхронная функция для выгрузки комментариев комментария
+    async function fetchComments(url) {
+      try {
+        // выводим надпись "Загрузка..." чтобы пользователь видел что комментарии загружаются
+        commentsContainer.innerHTML = "Загрузка...";
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+
+        comments = data.comments;
+        for (let comment of comments) {
+          comment.date = formatDate(new Date(comment.date));
+        }
+        console.log(comments);
+        renderComments(comments);
+        // включаем кнопку добавления комментария когда комментарии успешно загрузились и отрисовались (изначально она выключена у тега button установлен аттрибут disabled)
+        addCommentButton.disabled = false;
+        console.log(comments);
+
+      } catch(error) {
+        // в случае ошибки выводим надпись 'Упс, возникла ошибка!'
+        commentsContainer.innerHTML = 'Упс, возникла ошибка!';
+        console.error('There was a problem with the fetch operation:', error);
+      }
+      console.log(comments);
+    }
 
     function renderComments(comments) {
       commentsContainer.innerHTML = '';
-      for (const comment of comments){
+      for (const comment of comments) {
         commentsContainer.append(createCommentElement(comment));
       }
     }
@@ -135,11 +143,10 @@ fetch('https://wedev-api.sky.pro/api/v1/:Petr/comments')
     function validateCommentData({author, text} = {}) {
       // функция принимает объект с полями author и text которые обозначают имя автора и текст соответсвенно
       // делаем trim() чтобы убрать пробелы в начале и в конце - таким образом если пользователь введет три пробела поле будет считаться пустым
-    
       if (author.trim().length >= 3 && text.trim().length >= 3) {
-        
         return true;
-      } else return false;
+      }
+      return false;
     }
 
     // функция для создания элемента комментария
@@ -172,7 +179,7 @@ fetch('https://wedev-api.sky.pro/api/v1/:Petr/comments')
       // вставляем внутрь структуру комментария
       commentElement.innerHTML = `
       <div class="comment-header">
-          <div>${author.name||author}</div>
+          <div>${author.name || author}</div>
           <div>${date}</div>
         </div>
         <div class="comment-body">
@@ -204,19 +211,24 @@ fetch('https://wedev-api.sky.pro/api/v1/:Petr/comments')
       // возвращаем строку с датой в нужном формате
       return `${day}.${month}.${year} ${hours}:${minutes}`;
     }
-    // 2024-05-05T15:04:46.439Z
-    function formatDateAPI(date){
-      for(const comment of date){
-        let result = new Date(comment.date)
-        let options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',second:'2-digit'};
-        let result1 = result.toLocaleDateString("ru-RU", options)
-        comment.date =  result1
-      }
-      return date
-    }
+    // // 2024-05-05T15:04:46.439Z
+    // function formatDateAPI(date) {
+    //   for(const comment of date) {
+    //     let result = new Date(comment.date);
+    //     let options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',second:'2-digit'};
+    //     let result1 = result.toLocaleDateString("ru-RU", options)
+    //     comment.date =  result1
+    //   }
+    //   return date
+    // }
     
     // функция добавления комментария
     function addFormComment() {
+      // отключаем кнопку добавления комментария пока новый комментарий будет добавляться
+      addCommentButton.disabled = true;
+      // элемент для вывода сообщений пользователю
+      const formResponse = document.querySelector(".add-form-response");
+      formResponse.style.color = '';
       // получаем имя автора из поля ввода формы
       const author = form.querySelector(".add-form-name").value;
       // аналогично получаем текст комментария
@@ -227,78 +239,78 @@ fetch('https://wedev-api.sky.pro/api/v1/:Petr/comments')
       const comment = {author, text, date};
 
       if (validateCommentData(comment)) {
-        const positive = document.querySelector(".add-form-responce");
-        positive.style.color = 'green'
-        positive.innerHTML = `Комментарий успешно добавлен ` 
-        // URL для отправки комментария
+        // оповещаем пользователя о добавлении комментария
+        formResponse.innerHTML = 'Добавление комментария...';
+        // Данные нового комментария
+        const newCommentData = {
+          "text": comment.text,
+          "name": comment.author,
+        };
+        console.log(JSON.stringify(newCommentData))
 
+        // Опции для запроса
+        const options = {
+          method: 'POST',
+          body: JSON.stringify(newCommentData) // Преобразуем данные нового комментария в JSON и передаем в тело запроса
+        };
+        // Отправляем POST-запрос
+        fetch(API_URL, options)
+          .then(response => {
+            // Проверяем, успешен ли ответ
+            if (!response.ok) {
+              throw new Error('Ошибка сетевого запроса');
+            }
+            // Возвращаем ответ в формате JSON
+            return response.json();
+          })
+          .then(data => {
+            // Проверяем, получен ли объект результата
+            if (data.result === 'ok') {
+              // если поля не пустые (validateCommentData(comment) вернула true)
+              // создаем элемент комментария
+              const commentElement = createCommentElement(comment);
+              // добавляем его в контейнер комментариев
+              comments.push({author, text, date, likes: 0, liked: false});
+              commentsContainer.append(commentElement);
+              // стираем значения полей ввода формы 
+              form.querySelector(".add-form-name").value = '';
+              form.querySelector(".add-form-text").value = '';
+              formResponse.style.color = 'green';
+              formResponse.innerHTML = `Комментарий успешно добавлен`;
+              // иначе выводим модальное окно с надписью "Не все поля заполнены!"
+              console.log('Комментарий успешно добавлен:', data);
+            } else {
+              formResponse.style.color = 'red';
+              formResponse.innerHTML = `Ошибка при добавлении комментария`;
+              console.error('Ошибка при добавлении комментария:', data.error);
+            }
+          })
+          .catch(error => {
+            formResponse.style.color = 'red';
+            formResponse.innerHTML = `Произошла ошибка с запросом`;
+            // Обрабатываем любые ошибки, возникшие во время запроса
+            console.error('Произошла ошибка с запросом:', error);
+          })
+          .finally(() => {
+            // независимо от результата добавления запроса включаем кнопку добавления комментария
+            addCommentButton.disabled = false;
+          });
 
-        const url = 'https://wedev-api.sky.pro/api/v1/:Petr/comments';
-
-// Данные нового комментария
-const newCommentData = {
-  "text": comment.text,
-  "name": comment.author,
-};
-console.log(JSON.stringify(newCommentData))
-
-// Опции для запроса
-const options = {
-  method: 'POST',
- 
-  
-  body: JSON.stringify(newCommentData) // Преобразуем данные нового комментария в JSON и передаем в тело запроса
-};
-
-// Отправляем POST-запрос
-fetch(url, options)
-  .then(response => {
-    // Проверяем, успешен ли ответ
-    if (!response.ok) {
-      throw new Error('Ошибка сетевого запроса');
-    }
-    // Возвращаем ответ в формате JSON
-    return response.json();
-  })
-  .then(data => {
-    // Проверяем, получен ли объект результата
-    if (data.result === 'ok') {
-       // если поля не пустые (validateCommentData(comment) вернула true)
-        // создаем элемент комментария
-        const commentElement = createCommentElement(comment);
-        // добавляем его в контейнер комментариев
-        comments.push({author, text, date, likes: 0, liked: false})
-        commentsContainer.append(commentElement);
-        // стираем значения полей ввода формы 
-        form.querySelector(".add-form-name").value = '';
-        form.querySelector(".add-form-text").value = '';
-        // иначе выводим модальное окно с надписью "Не все поля заполнены!"
-      console.log('Комментарий успешно добавлен:', data);
-    } else {
-      console.error('Ошибка при добавлении комментария:', data.error);
-    }
-  })
-  .catch(error => {
-    // Обрабатываем любые ошибки, возникшие во время запроса
-    console.error('Произошла ошибка с запросом:', error);
-  });
-
-      } else  if (author.length < 3 && author.length !== 0 ){ 
-        const negative = document.querySelector(".add-form-responce");
-        negative.style.color = 'red'
-        negative.innerHTML = `Мало символов в поле авторов`
-      }  else if (text.length < 3 && text.length !== 0){
-        const negative = document.querySelector(".add-form-responce");
-        negative.style.color = 'red'
-        negative.innerHTML = `Мало символов в  поле  текст`
+      } else {
+        // если валидация полей не прошла - выводим причину
+        formResponse.style.color = 'red';
+        if (author.length < 3 && author.length !== 0 ) { 
+          formResponse.innerHTML = `Мало символов в поле авторов`;
+        } else if (text.length < 3 && text.length !== 0) {
+          formResponse.innerHTML = `Мало символов в поле текст`;
+        } else {
+          formResponse.innerHTML = `Поля должны быть заполнены`;
+        }
+        // включаем кнопку добавления комментария
+        addCommentButton.disabled = false;
       }
-      else   {
-        const negative = document.querySelector(".add-form-responce");
-        negative.style.color = 'red'
-        negative.innerHTML = `Поля должны быть заполненны`
-      }
     }
-    
+
     console.log("It works!");
   </script>
 </html>
