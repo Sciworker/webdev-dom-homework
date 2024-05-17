@@ -9,40 +9,7 @@
   <body>
     <div class="container">
       <ul class="comments">
-        <li class="comment">
-          <div class="comment-header">
-            <div>Глеб Фокин</div>
-            <div>12.02.22 12:18</div>
-          </div>
-          <div class="comment-body">
-            <div class="comment-text">
-              Это будет первый комментарий на этой странице
-            </div>
-          </div>
-          <div class="comment-footer">
-            <div class="likes">
-              <span class="likes-counter">3</span>
-              <button class="like-button"></button>
-            </div>
-          </div>
-        </li>
-        <li class="comment">
-          <div class="comment-header">
-            <div>Варвара Н.</div>
-            <div>13.02.22 19:22</div>
-          </div>
-          <div class="comment-body">
-            <div class="comment-text">
-              Мне нравится как оформлена эта страница! ❤
-            </div>
-          </div>
-          <div class="comment-footer">
-            <div class="likes">
-              <span class="likes-counter">75</span>
-              <button class="like-button -active-like"></button>
-            </div>
-          </div>
-        </li>
+       
       </ul>
       <div class="add-form">
         <input
@@ -53,19 +20,239 @@
         <textarea
           type="textarea"
           class="add-form-text"
-          placeholder="Введите ваш коментарий"
+          placeholder="Введите ваш комментарий"
           rows="4"
         ></textarea>
+        <div class="add-form-response">
+            
+        </div>
         <div class="add-form-row">
-          <button class="add-form-button">Написать</button>
+          <button class="add-form-button" disabled>Написать</button>
         </div>
       </div>
     </div>
   </body>
 
+  
   <script>
     "use strict";
     // Код писать здесь
+
+    let comments = null;
+    const API_URL = 'https://wedev-api.sky.pro/api/v1/:Petr/comments';
+    // получаем элементы необходимые для работы (используем document.querySelector('.class-name')) - будет искать элемент на странице по названию класса
+    // форма
+    const form = document.querySelector(".add-form");
+    // кнопка формы для добавления комментария
+    const addCommentButton = form.querySelector('.add-form-button');
+    // контейнер комментариев
+    const commentsContainer = document.querySelector(".comments");
+
+    // добавляем слушатель события на кнопку: при клике будет вызываться функция addComment (см далее)
+    addCommentButton.addEventListener("click", addFormComment);
+
+    fetchComments(API_URL, true);
+
+    // асинхронная функция для выгрузки комментариев комментария
+    async function fetchComments(url, firstFetch = false) {
+      try {
+        // выводим надпись "Загрузка..." чтобы пользователь видел что комментарии загружаются
+        if (firstFetch) commentsContainer.innerHTML = "Загрузка...";
+
+        const response = await fetch(url);
+        if (!response.ok) {
+          if (response.status === 500) {
+            throw new Error('Внутренняя ошибка сервера')
+          } else {
+            throw new Error('Ошибка сетевого запроса ' + response.status);
+          }
+        }
+
+        const data = await response.json();
+
+        comments = data.comments;
+        for (let comment of comments) {
+          comment.date = formatDate(new Date(comment.date));
+        }
+        console.log(comments);
+        renderComments(comments);
+        // включаем кнопку добавления комментария когда комментарии успешно загрузились и отрисовались (изначально она выключена у тега button установлен аттрибут disabled)
+        if (firstFetch) addCommentButton.disabled = false;
+
+      } catch(error) {
+        if (error.message === 'Failed to fetch') error.message = 'Проблемы с интернет соединением';
+        // в случае ошибки выводим надпись 'Упс, возникла ошибка!'
+        alert(`${error.message}`);
+        commentsContainer.innerHTML = 'Упс, возникла ошибка при загрузке данных!';
+        console.error('Возникла ошибка при загрузке данных: ', error);
+        if (!firstFetch) throw error;
+      }
+    }
+
+    function renderComments(comments) {
+      commentsContainer.innerHTML = '';
+      for (const comment of comments) {
+        commentsContainer.append(createCommentElement(comment));
+      }
+    }
+    
+    function likeComment() {
+      const targetCommentElement = event.target.closest(".comment");
+      const comment = comments[Array.from(commentsContainer.children).indexOf(targetCommentElement)];
+      toggleLike(comment);
+      renderComments(comments);
+    }
+
+    function toggleLike(comment) {
+      comment.liked = !comment.liked;
+      if (comment.liked) {
+        comment.likes++;
+      } else {
+        comment.likes--;
+      }
+    }
+
+    function createCommentElement({author, text, date, likes = 0, liked = false} = {}) {
+      // функция принимает объект с полями author text date и likes которые обозначают имя автора текст дата и количество лайков соответственно
+
+      // создаем <li></li>
+      const commentElement = document.createElement('li');
+      // добавляем ему класс class="comment"
+      commentElement.classList.add('comment');
+
+      // вставляем внутрь структуру комментария
+      commentElement.innerHTML = `
+      <div class="comment-header">
+          <div>${author.name || author}</div>
+          <div>${date}</div>
+        </div>
+        <div class="comment-body">
+          <div class="comment-text">${text}
+          </div>
+        </div>
+        <div class="comment-footer">
+          <div class="likes">
+            <span class="likes-counter">${likes}</span>
+            <button class="like-button${liked ? ' -active-like' : ''}" onclick="likeComment()""></button>
+          </div>
+        </div>
+        `;
+
+      // возвращаем сконструированный html код комментария
+      return commentElement;
+    }
+
+    // функция возвращающая строку даты в нужном формате
+    function formatDate(date) {
+      // получает объект даты создания комментария
+      // каждый параметр даты дополняется 0 спереди если является однозначной цифрой
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = String(date.getFullYear()).slice(-2);
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+
+      // возвращаем строку с датой в нужном формате
+      return `${day}.${month}.${year} ${hours}:${minutes}`;
+    }
+
+    // функция добавления комментария
+    function addFormComment() {
+      // элемент для вывода сообщений пользователю
+      const formResponse = document.querySelector(".add-form-response");
+      formResponse.style.color = '';
+      // оповещаем пользователя о добавлении комментария
+      formResponse.innerHTML = 'Отправление комментария...';
+      // отключаем кнопку добавления комментария пока новый комментарий будет добавляться
+      addCommentButton.disabled = true;
+      // получаем имя автора из поля ввода формы
+      const author = form.querySelector(".add-form-name").value;
+      // аналогично получаем текст комментария
+      const text = form.querySelector(".add-form-text").value;
+      // получаем строку с датой в нужно формате (передаем новосозданный объект Date)
+      const date = formatDate(new Date());
+      // создаем объект комментария с полями author text date и likes которые обозначают имя автора текст дата и количество лайков соответственно
+      const comment = {author, text, date};
+
+      // if (validateCommentData(comment)) {
+        // Данные нового комментария
+        const newCommentData = {
+          "text": comment.text,
+          "name": comment.author,
+          // "forceError": true,
+        };
+        console.log(JSON.stringify(newCommentData))
+
+        // Опции для запроса
+        const options = {
+          method: 'POST',
+          body: JSON.stringify(newCommentData), // Преобразуем данные нового комментария в JSON и передаем в тело запроса
+        };
+        // Отправляем POST-запрос
+        fetch(API_URL, options)
+          .then(response => {
+            // Проверяем, успешен ли ответ
+            if (!response.ok) {
+              if (response.status === 400) {
+                return response.json().then(error => {throw new Error(error.error)})
+              } else if (response.status === 500) {
+                throw new Error('Внутренняя ошибка сервера')
+              } else {
+                throw new Error('Ошибка сетевого запроса ' + response.status);
+              }
+            }
+            // // Возвращаем ответ в формате JSON
+            // return response.json();
+          })
+          // .then(data => {
+          //   // Проверяем, получен ли объект результата
+          //   if (data.result === 'ok') {
+          //     console.log('Успешный запрос на добавление комментария:', data);
+          //   } else {
+          //     throw data.error;
+          //   }
+          // })
+          .catch(error => {
+            if (error.message === 'Failed to fetch') error.message = 'Проблемы с интернет соединением';
+            alert(`${error.message}`);
+            throw error;
+          })
+          .then(() => fetchComments(API_URL))
+          .then(() => {
+            form.querySelector(".add-form-name").value = '';
+            form.querySelector(".add-form-text").value = '';
+            formResponse.style.color = 'green';
+            formResponse.innerHTML = `Комментарий успешно отправлен`;
+          })
+          // .catch(error => {
+          //   if error.code === 400
+          // })
+          .catch(error => {
+            formResponse.style.color = 'red';
+            formResponse.innerHTML = `Произошла ошибка: ${error.message}`;
+            // Обрабатываем любые ошибки, возникшие во время запроса
+            console.error('Произошла ошибка с запросом:', error);
+          })
+          // потом then для get
+          .finally(() => {
+            // независимо от результата добавления запроса включаем кнопку добавления комментария
+            addCommentButton.disabled = false;
+          });
+      // } else {
+      //   // если валидация полей не прошла - выводим причину
+      //   formResponse.style.color = 'red';
+      //   if (author.length < 3 && author.length !== 0 ) { 
+      //     formResponse.innerHTML = `Мало символов в поле авторов`;
+      //   } else if (text.length < 3 && text.length !== 0) {
+      //     formResponse.innerHTML = `Мало символов в поле текст`;
+      //   } else {
+      //     formResponse.innerHTML = `Поля должны быть заполнены`;
+      //   }
+      //   // включаем кнопку добавления комментария
+      //   addCommentButton.disabled = false;
+      // }
+    }
+
     console.log("It works!");
   </script>
 </html>
