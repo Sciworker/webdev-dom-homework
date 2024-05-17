@@ -33,6 +33,7 @@
     </div>
   </body>
 
+  
   <script>
     "use strict";
     // Код писать здесь
@@ -57,10 +58,16 @@
       try {
         // выводим надпись "Загрузка..." чтобы пользователь видел что комментарии загружаются
         if (firstFetch) commentsContainer.innerHTML = "Загрузка...";
+
         const response = await fetch(url);
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          if (response.status === 500) {
+            throw new Error('Внутренняя ошибка сервера')
+          } else {
+            throw new Error('Ошибка сетевого запроса ' + response.status);
+          }
         }
+
         const data = await response.json();
 
         comments = data.comments;
@@ -70,16 +77,16 @@
         console.log(comments);
         renderComments(comments);
         // включаем кнопку добавления комментария когда комментарии успешно загрузились и отрисовались (изначально она выключена у тега button установлен аттрибут disabled)
-        addCommentButton.disabled = false;
-        console.log(comments);
+        if (firstFetch) addCommentButton.disabled = false;
 
       } catch(error) {
+        if (error.message === 'Failed to fetch') error.message = 'Проблемы с интернет соединением';
         // в случае ошибки выводим надпись 'Упс, возникла ошибка!'
+        alert(`${error.message}`);
         commentsContainer.innerHTML = 'Упс, возникла ошибка при загрузке данных!';
-        console.error('There was a problem with the fetch operation:', error);
-        throw error;
+        console.error('Возникла ошибка при загрузке данных: ', error);
+        if (!firstFetch) throw error;
       }
-      console.log(comments);
     }
 
     function renderComments(comments) {
@@ -105,17 +112,6 @@
       }
     }
 
-    // функция для проверки значений формы, которая будет возвращать true если поля заполнены, иначе - false 
-    function validateCommentData({author, text} = {}) {
-      // функция принимает объект с полями author и text которые обозначают имя автора и текст соответсвенно
-      // делаем trim() чтобы убрать пробелы в начале и в конце - таким образом если пользователь введет три пробела поле будет считаться пустым
-      if (author.trim().length >= 3 && text.trim().length >= 3) {
-        return true;
-      }
-      return false;
-    }
-
-    
     function createCommentElement({author, text, date, likes = 0, liked = false} = {}) {
       // функция принимает объект с полями author text date и likes которые обозначают имя автора текст дата и количество лайков соответственно
 
@@ -159,14 +155,16 @@
       // возвращаем строку с датой в нужном формате
       return `${day}.${month}.${year} ${hours}:${minutes}`;
     }
-    
+
     // функция добавления комментария
     function addFormComment() {
-      // отключаем кнопку добавления комментария пока новый комментарий будет добавляться
-      addCommentButton.disabled = true;
       // элемент для вывода сообщений пользователю
       const formResponse = document.querySelector(".add-form-response");
       formResponse.style.color = '';
+      // оповещаем пользователя о добавлении комментария
+      formResponse.innerHTML = 'Отправление комментария...';
+      // отключаем кнопку добавления комментария пока новый комментарий будет добавляться
+      addCommentButton.disabled = true;
       // получаем имя автора из поля ввода формы
       const author = form.querySelector(".add-form-name").value;
       // аналогично получаем текст комментария
@@ -176,67 +174,83 @@
       // создаем объект комментария с полями author text date и likes которые обозначают имя автора текст дата и количество лайков соответственно
       const comment = {author, text, date};
 
-      if (validateCommentData(comment)) {
-        // оповещаем пользователя о добавлении комментария
-        formResponse.innerHTML = 'Отправление комментария...';
+      // if (validateCommentData(comment)) {
         // Данные нового комментария
         const newCommentData = {
           "text": comment.text,
           "name": comment.author,
+          // "forceError": true,
         };
         console.log(JSON.stringify(newCommentData))
 
         // Опции для запроса
         const options = {
           method: 'POST',
-          body: JSON.stringify(newCommentData) // Преобразуем данные нового комментария в JSON и передаем в тело запроса
+          body: JSON.stringify(newCommentData), // Преобразуем данные нового комментария в JSON и передаем в тело запроса
         };
         // Отправляем POST-запрос
         fetch(API_URL, options)
           .then(response => {
             // Проверяем, успешен ли ответ
             if (!response.ok) {
-              throw new Error('Ошибка сетевого запроса');
+              if (response.status === 400) {
+                return response.json().then(error => {throw new Error(error.error)})
+              } else if (response.status === 500) {
+                throw new Error('Внутренняя ошибка сервера')
+              } else {
+                throw new Error('Ошибка сетевого запроса ' + response.status);
+              }
             }
-            // Возвращаем ответ в формате JSON
-            return response.json();
+            // // Возвращаем ответ в формате JSON
+            // return response.json();
           })
-          .then(data => {
-            // Проверяем, получен ли объект результата
-            if (data.result === 'ok') {
-              console.log('Комментарий успешно добавлен:', data);
-            } else {
-              throw data.error;
-            }
-          }).then(() => fetchComments(API_URL)).then(() => {
+          // .then(data => {
+          //   // Проверяем, получен ли объект результата
+          //   if (data.result === 'ok') {
+          //     console.log('Успешный запрос на добавление комментария:', data);
+          //   } else {
+          //     throw data.error;
+          //   }
+          // })
+          .catch(error => {
+            if (error.message === 'Failed to fetch') error.message = 'Проблемы с интернет соединением';
+            alert(`${error.message}`);
+            throw error;
+          })
+          .then(() => fetchComments(API_URL))
+          .then(() => {
             form.querySelector(".add-form-name").value = '';
             form.querySelector(".add-form-text").value = '';
             formResponse.style.color = 'green';
             formResponse.innerHTML = `Комментарий успешно отправлен`;
           })
+          // .catch(error => {
+          //   if error.code === 400
+          // })
           .catch(error => {
             formResponse.style.color = 'red';
-            formResponse.innerHTML = `Произошла ошибка с запросом`;
+            formResponse.innerHTML = `Произошла ошибка: ${error.message}`;
             // Обрабатываем любые ошибки, возникшие во время запроса
             console.error('Произошла ошибка с запросом:', error);
           })
+          // потом then для get
           .finally(() => {
             // независимо от результата добавления запроса включаем кнопку добавления комментария
             addCommentButton.disabled = false;
           });
-      } else {
-        // если валидация полей не прошла - выводим причину
-        formResponse.style.color = 'red';
-        if (author.length < 3 && author.length !== 0 ) { 
-          formResponse.innerHTML = `Мало символов в поле авторов`;
-        } else if (text.length < 3 && text.length !== 0) {
-          formResponse.innerHTML = `Мало символов в поле текст`;
-        } else {
-          formResponse.innerHTML = `Поля должны быть заполнены`;
-        }
-        // включаем кнопку добавления комментария
-        addCommentButton.disabled = false;
-      }
+      // } else {
+      //   // если валидация полей не прошла - выводим причину
+      //   formResponse.style.color = 'red';
+      //   if (author.length < 3 && author.length !== 0 ) { 
+      //     formResponse.innerHTML = `Мало символов в поле авторов`;
+      //   } else if (text.length < 3 && text.length !== 0) {
+      //     formResponse.innerHTML = `Мало символов в поле текст`;
+      //   } else {
+      //     formResponse.innerHTML = `Поля должны быть заполнены`;
+      //   }
+      //   // включаем кнопку добавления комментария
+      //   addCommentButton.disabled = false;
+      // }
     }
 
     console.log("It works!");
