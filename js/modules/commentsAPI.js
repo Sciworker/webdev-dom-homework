@@ -1,10 +1,11 @@
 import { formatDate } from "./utils.js";
+import { getAuthData, getToken } from "./authAPI.js";
 
-export const API_URL = 'https://wedev-api.sky.pro/api/v1/:Petr/comments';
+export const COMMENTS_API_URL = 'https://wedev-api.sky.pro/api/v2/Petr/comments';
 
-export async function getComments(url) {
+export async function getComments() {
     try {
-        const response = await fetch(url);
+        const response = await fetch(COMMENTS_API_URL);
         if (!response.ok) {
             if (response.status === 500) {
                 throw new Error('Внутренняя ошибка сервера');
@@ -29,11 +30,11 @@ export async function getComments(url) {
     }
 }
 
-export async function postComment(url, newComment) {
+export async function postComment(newComment) {
     try {
         const newCommentData = {
             "text": newComment.text,
-            "name": newComment.author,
+            // "name": newComment.author,
             // "forceError": true,
         };
     
@@ -41,10 +42,13 @@ export async function postComment(url, newComment) {
     
         const options = {
             method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            },
             body: JSON.stringify(newCommentData),
         };
     
-        const response = await fetch(url, options);
+        const response = await fetch(COMMENTS_API_URL, options);
         if (!response.ok) {
             if (response.status === 400) {
                 return response.json().then(error => {throw new Error(error.error)})

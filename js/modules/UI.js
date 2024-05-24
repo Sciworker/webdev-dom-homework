@@ -1,5 +1,6 @@
 import { commentsArray } from "./main.js";
 import { escapeHTML } from "./utils.js";
+import { getAuthData } from "./authAPI.js";
 
 const commentsContainer = document.querySelector(".comments");
 const form = document.querySelector(".add-form");
@@ -55,4 +56,19 @@ function createCommentElement({author, text, date, likes = 0, liked = false} = {
     commentElement.querySelector(".like-button").addEventListener("click", likeComment);
 
     return commentElement;
+}
+
+export function renderAuthLink() {
+    const authLink = document.createElement('a');
+    authLink.classList.add('auth-link');
+    authLink.href = 'login.html';
+    authLink.textContent = 'Чтобы добавить комментарий, авторизуйтесь';
+    commentsContainer.append(authLink);
+}
+
+export function showAddCommentForm() {
+    form.style.display = 'flex';
+    const authData = getAuthData();
+    form.querySelector(".add-form-name").value = authData.user.name;
+    form.querySelector(".add-form-name").readOnly = true;
 }
