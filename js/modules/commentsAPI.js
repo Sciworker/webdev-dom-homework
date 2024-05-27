@@ -1,5 +1,5 @@
 import { formatDate } from "./utils.js";
-import { getAuthData, getToken } from "./authAPI.js";
+import { getToken } from "./authAPI.js";
 
 export const COMMENTS_API_URL = 'https://wedev-api.sky.pro/api/v2/Petr/comments';
 

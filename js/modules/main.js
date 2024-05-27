@@ -1,7 +1,7 @@
 import { getComments, postComment } from "./commentsAPI.js";
 import { renderComments, renderAuthLink, showAddCommentForm } from "./UI.js";
 import { formatDate } from "./utils.js";
-import { getAuthData } from "./authAPI.js";
+import { getAuthData, login } from "./authAPI.js";
 
 export let commentsArray = null;
 const form = document.querySelector(".add-form");
@@ -28,8 +28,9 @@ getComments()
         commentsContainer.innerHTML = 'Упс, возникла ошибка при загрузке данных!';
     });
 
-function addComment() {
-    const formResponse = document.querySelector(".add-form-response");
+function addComment(e) {
+    const form = e.target.closest(".add-form");
+    const formResponse = form.querySelector(".add-form-response");
     formResponse.style.color = '';
     formResponse.innerHTML = 'Отправление комментария...';
     addCommentButton.disabled = true;
@@ -58,3 +59,28 @@ function addComment() {
             addCommentButton.disabled = false;
         });
 }
+
+export function handleLogin(e) {
+    const loginButton = e.target;
+    const authorizationForm = loginButton.closest(".login-form");
+    const formResponse = authorizationForm.querySelector(".login-form-response");
+    formResponse.style.color = '';
+    formResponse.innerHTML = 'Аутентификация...';
+    loginButton.disabled = true;
+    const username = document.querySelector(".login-form-username").value;
+    const password = document.querySelector(".login-form-password").value;
+    const authData = {"login": username, password};
+    login(authData)
+        .then(() => {
+            renderComments(commentsArray);
+            showAddCommentForm();
+        })
+        .catch(error => {
+            formResponse.style.color = 'red';
+            formResponse.innerHTML = `Ошибка: ${error.message}`;
+        })
+        .finally(() => {
+            loginButton.disabled = false;
+        });
+}
+

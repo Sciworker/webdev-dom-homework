@@ -1,7 +1,9 @@
 import { commentsArray } from "./main.js";
 import { escapeHTML } from "./utils.js";
 import { getAuthData } from "./authAPI.js";
+import { handleLogin } from "./main.js"
 
+const container = document.querySelector(".container");
 const commentsContainer = document.querySelector(".comments");
 const form = document.querySelector(".add-form");
 
@@ -12,7 +14,7 @@ export function renderComments(comments) {
     }
 }
 
-function likeComment() {
+function likeComment(event) {
     const targetCommentElement = event.target.closest(".comment");
     const comment = commentsArray[Array.from(commentsContainer.children).indexOf(targetCommentElement)];
     toggleLike(comment);
@@ -61,9 +63,37 @@ function createCommentElement({author, text, date, likes = 0, liked = false} = {
 export function renderAuthLink() {
     const authLink = document.createElement('a');
     authLink.classList.add('auth-link');
-    authLink.href = 'login.html';
     authLink.textContent = 'Чтобы добавить комментарий, авторизуйтесь';
-    commentsContainer.append(authLink);
+    authLink.onclick = () => {
+        renderAuthorizationForm();
+    }
+    container.append(authLink);
+}
+
+export function renderAuthorizationForm() {
+    document.querySelector(".auth-link")?.remove();
+
+    commentsContainer.innerHTML = `
+        <div class="login-form">
+            <input
+                type="text"
+                class="login-form-username"
+                placeholder="Логин"
+                required
+            />
+            <input
+                type="password"
+                class="login-form-password"
+                placeholder="Пароль"
+                required
+            />
+            <div class="login-form-response"></div>
+            <div class="login-form-row">
+                <button class="login-form-button">Войти</button>
+            </div>
+        </div>
+    `;
+    commentsContainer.querySelector(".login-form-button").addEventListener("click", handleLogin);
 }
 
 export function showAddCommentForm() {
@@ -72,3 +102,4 @@ export function showAddCommentForm() {
     form.querySelector(".add-form-name").value = authData.user.name;
     form.querySelector(".add-form-name").readOnly = true;
 }
+
