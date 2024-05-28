@@ -15,10 +15,14 @@ export function renderComments(comments) {
 }
 
 function likeComment(event) {
-    const targetCommentElement = event.target.closest(".comment");
-    const comment = commentsArray[Array.from(commentsContainer.children).indexOf(targetCommentElement)];
-    toggleLike(comment);
-    renderComments(commentsArray);
+    if (getAuthData()) {
+        const targetCommentElement = event.target.closest(".comment");
+        const comment = commentsArray[Array.from(commentsContainer.children).indexOf(targetCommentElement)];
+        toggleLike(comment);
+        renderComments(commentsArray);
+    } else {
+        alert('Авторизуйтесь, чтобы лайкнуть комментарий')
+    }
 }
 
 function toggleLike(comment) {
@@ -35,7 +39,6 @@ function createCommentElement({author, text, date, likes = 0, liked = false} = {
     commentElement.classList.add('comment');
     commentElement.addEventListener("click",  function() {
         if (!event.target.classList.contains("like-button")) {
-            form.querySelector(".add-form-name").value = author.name;
             form.querySelector(".add-form-text").value = text;
         }
     })
