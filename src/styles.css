@@ -22,7 +22,8 @@ body {
 }
 
 .comment,
-.add-form, .login-form {
+.add-form,
+.add-form-authorization {
   width: 596px;
   box-sizing: border-box;
   background: radial-gradient(
@@ -32,10 +33,6 @@ body {
   );
   filter: drop-shadow(0px 20px 67px rgba(0, 0, 0, 0.08));
   border-radius: 20px;
-}
-
-.login-form {
-  width: 400px;
 }
 
 .comments {
@@ -66,7 +63,6 @@ body {
 
 .comment-text {
   font-size: 32px;
-  white-space: pre-line;
 }
 
 .likes {
@@ -102,33 +98,51 @@ body {
   display: flex;
   flex-direction: column;
 }
-.login-form {
+
+.add-form-authorization {
   padding: 20px;
+  margin-top: 48px;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  row-gap: 12px;
+}
+
+.add-form-name-authorization {
+  width: 400px;
+  padding: 11px 22px;
 }
 
 .add-form-name,
 .add-form-text,
-.login-form-password,
-.login-form-username {
+.add-form-name-authorization {
   font-size: 16px;
   font-family: Helvetica;
   border-radius: 8px;
   border: none;
 }
 
+.add-form-row-authorization {
+  display: flex;
+  justify-content: space-evenly;
+  column-gap: 12px;
+  margin-bottom: 24px;
+}
+
+.add-form-button-authorization {
+  margin-top: 24px;
+  font-size: 24px;
+  padding: 10px 20px;
+  border-radius: 18px;
+  border: 2px solid #bcec30;
+  color: #bcec30;
+  background-color: transparent;
+  cursor: pointer;
+}
+
 .add-form-name {
   width: 300px;
   padding: 11px 22px;
-}
-.login-form-username, .login-form-password {
-  flex-grow: 1;
-  padding: 11px 22px;
-}
-
-.login-form-password {
-  margin-top: 12px;
 }
 
 .add-form-text {
@@ -137,12 +151,16 @@ body {
   resize: none;
 }
 
-.add-form-row, .login-form-row {
+.authorization {
+  margin-top: 12px;
+}
+
+.add-form-row {
   display: flex;
   justify-content: flex-end;
 }
 
-.add-form-button, .login-form-button {
+.add-form-button {
   margin-top: 24px;
   font-size: 24px;
   padding: 10px 20px;
@@ -152,12 +170,71 @@ body {
   cursor: pointer;
 }
 
-.add-form-button:hover, .login-form-button:hover {
+.add-form-button,
+.add-form-button-authorization:hover {
   opacity: 0.9;
 }
 
-.auth-link {
-  text-decoration: underline;
-  margin: 15px 0px 0px 0px;
+.error {
+  background-color: rgb(255, 144, 144);
+}
+
+.quote {
+  background-color: #ffffff47;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 16px;
+}
+
+.manipulation-of-comments {
+  display: flex;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #a6a6a6;
+}
+
+.manipulation-of-comments:hover {
   color: #ffffff;
+  text-decoration: underline;
+  transition: all 0.1s;
+}
+
+.hide {
+  display: none;
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes customAni {
+  0%,
+  50%,
+  100% {
+    opacity: 1;
+  }
+
+  25%,
+  75% {
+    opacity: 0;
+  }
+}
+
+.-loading {
+  animation: customAni 2.5s ease 0s infinite normal none;
+}
+
+.progress-cursor {
+  cursor: progress;
+}
+
+.link-button {
+  color: #fff;
+  font-size: 16px;
+  text-decoration-line: underline;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
 }
