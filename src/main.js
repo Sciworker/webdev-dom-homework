@@ -8,7 +8,7 @@ import { renderComments } from "./render.js";
 
 export const commentsEl = document.getElementById("comments");
 
-export const baseURL = "https://wedev-api.sky.pro/api/v2/sviridevg/comments";
+export const baseURL = "https://wedev-api.sky.pro/api/v2/Petr/comments";
 export const userURL = "https://wedev-api.sky.pro/api/user";
 export const loginURL = "https://wedev-api.sky.pro/api/user/login";
 
