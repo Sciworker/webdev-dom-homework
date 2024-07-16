@@ -7,19 +7,8 @@
     "build": "webpack --mode development --watch",
     "dev": "webpack serve --mode development"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/sviridevg/webdev-dom-homework.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/sviridevg/webdev-dom-homework/issues"
-  },
-  "homepage": "https://github.com/sviridevg/webdev-dom-homework#readme",
-  "dependencies": {
-    "date-fns": "^3.6.0"
-  },
+  
+  
   "devDependencies": {
     "@babel/core": "^7.24.7",
     "@babel/preset-env": "^7.24.7",
